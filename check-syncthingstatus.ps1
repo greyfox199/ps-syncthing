@@ -90,6 +90,13 @@ if ($PowerShellObject.Required.errorMailPasswordFile) {
     throw "errorMailPasswordFile does not exist in json config file, aborting process"
 }
 
+#if ignoreSSLValidation option does not exist in json, abort process
+if ($PowerShellObject.Required.ignoreSSLValidation) {
+    $ignoreSSLValidation = $PowerShellObject.Required.ignoreSSLValidation
+} else {
+    throw "ignoreSSLValidation does not exist in json config file, aborting process"
+}
+
 [bool] $authStatus = $false
 [bool] $healthStatus = $false
 [int] $intErrorCount = 0
@@ -133,11 +140,26 @@ if ($PowerShellObject.Optional.daysToKeepLogFiles) {
     }
 }
 
-$Url = "$($BaseURL)/rest/system/config"
+if ($ignoreSSLValidation -eq "true") {
+    add-type @"
+    using System.Net;
+    using System.Security.Cryptography.X509Certificates;
+    public class TrustAllCertsPolicy : ICertificatePolicy {
+        public bool CheckValidationResult(
+            ServicePoint srvPoint, X509Certificate certificate,
+            WebRequest request, int certificateProblem) {
+            return true;
+        }
+    }
+"@
+    [System.Net.ServicePointManager]::CertificatePolicy = New-Object TrustAllCertsPolicy
+} else {
+    [System.Net.ServicePointManager]::CertificatePolicy = $null
+}
+
 $Headers = @{
       "X-API-KEY" = $APIKey
 }
-
 
 try {
     $Url = "$($BaseURL)/rest/system/ping"
@@ -211,6 +233,8 @@ if ($authStatus -eq $true) {
         }
     }
 
+    #todo
+    <#
     $Url = "$($BaseURL)/rest/cluster/pending/devices"
     $pendingDevices = Invoke-RestMethod -Uri $Url -Headers $Headers -Method Get -ContentType application/json
 
@@ -219,7 +243,7 @@ if ($authStatus -eq $true) {
 
     $Url = "$($BaseURL)/rest/system/error"
     $globalErrors = Invoke-RestMethod -Uri $Url -Headers $Headers -Method Get
-
+    #>
 
     #log retention
     if ($intDaysToKeepLogFiles -gt 0) {
@@ -246,11 +270,11 @@ if ($intErrorCount -gt 0) {
     #loop through all errors and add them to email body
     foreach ($strErrorElement in $arrStrErrors) {
         $intErrorCounter = $intErrorCounter + 1
-        $strEmailBody = $strEmailBody + $intErrorCounter.toString() + $strErrorElement + "<br>"
+        $strEmailBody = $strEmailBody + $intErrorCounter.toString() + ") " + $strErrorElement + "<br>"
     }
     $strEmailBody = $strEmailBody + "<br>Please see $strDetailLogFilePath on $strServerName for more details"
 
-    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: Sending email error report via $($errorMailAppID) app on $($errorMailTenantID) tenant from $($errorMailSender) $($errorMailRecipients) as specified in config file" -LogType "Info"
+    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: Sending email error report via $($errorMailAppID) app on $($errorMailTenantID) tenant from $($errorMailSender) to $($errorMailRecipients) as specified in config file" -LogType "Info"
     $errorEmailPasswordSecure = Get-Content $errorMailPasswordFile | ConvertTo-SecureString
     $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($errorEmailPasswordSecure)
     $errorEmailPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
