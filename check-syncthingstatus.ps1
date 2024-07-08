@@ -45,7 +45,7 @@ if ($PowerShellObject.Required.IgnoreHost) {
 if ($PowerShellObject.Required.devicesToCheck) {
     $devicesToCheck = $PowerShellObject.Required.devicesToCheck
 } else {
-    throw "IgnoreHost does not exist in json config file, aborting process"
+    throw "devicesToCheck does not exist in json config file, aborting process"
 }
 
 #if errorMailSender optoin does not exist in json, abort process
@@ -99,6 +99,7 @@ if ($PowerShellObject.Required.ignoreSSLValidation) {
 
 [bool] $authStatus = $false
 [bool] $healthStatus = $false
+[bool] $blnWriteToLog = $false
 [int] $intErrorCount = 0
 $arrStrErrors = @()
 
@@ -116,18 +117,6 @@ if (Test-Path -Path $PowerShellObject.Optional.logsDirectory -PathType Container
     [string] $strTimeStamp = $(get-date -f yyyy-MM-dd-hh_mm_ss)
     [string] $strDetailLogFilePath = $PowerShellObject.Optional.logsDirectory + "\syncthing-status-detail-" + $strTimeStamp + ".log"
     $objDetailLogFile = [System.IO.StreamWriter] $strDetailLogFilePath
-}
-  
-#function to write log file
-Function LogWrite($objLogFile, [string]$strLogstring, [bool]$DisplayInConsole=$true)
-{ 
-    if ($DisplayInConsole -eq $true) {
-        write-host $strLogstring
-    }
-    if ($blnWriteToLog -eq $true) {
-        $objLogFile.writeline($strLogstring)
-        $objLogFile.flush()
-    }
 }
 
 #if days to keep log files directive exists in config file, set configured days to keep log files
