@@ -237,15 +237,15 @@ if ($authStatus -eq $true) {
     #log retention
     if ($intDaysToKeepLogFiles -gt 0) {
         try {
-            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: Purging log files older than $($intDaysToKeepLogFiles) days from $($PowerShellObject.Required.logsDirectory)" -LogType "Info"
+            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: Purging log files older than $($intDaysToKeepLogFiles) days from $($PowerShellObject.Optional.logsDirectory)" -LogType "Info"
             $CurrentDate = Get-Date
             $DatetoDelete = $CurrentDate.AddDays("-$($intDaysToKeepLogFiles)")
-            Get-ChildItem "$($PowerShellObject.Required.logsDirectory)" | Where-Object { $_.LastWriteTime -lt $DatetoDelete } | Remove-Item
+            Get-ChildItem "$($PowerShellObject.Optional.logsDirectory)" | Where-Object { $_.LastWriteTime -lt $DatetoDelete } | Remove-Item
         } catch {
             $ErrorMessage = $_.Exception.Message
             $line = $_.InvocationInfo.ScriptLineNumber
-            $arrStrErrors += "Failed to purge log files older than $($intDaysToKeepLogFiles) days from $($PowerShellObject.Required.logsDirectory) with the following error: $ErrorMessage"
-            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Error: Failed to purge log files older than $($intDaysToKeepLogFiles) days from $($PowerShellObject.Required.logsDirectory) with the following error: $ErrorMessage" -LogType "Error"
+            $arrStrErrors += "Failed to purge log files older than $($intDaysToKeepLogFiles) days from $($PowerShellObject.Optional.logsDirectory) with the following error: $ErrorMessage"
+            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Error: Failed to purge log files older than $($intDaysToKeepLogFiles) days from $($PowerShellObject.Optional.logsDirectory) with the following error: $ErrorMessage" -LogType "Error"
         }
     }
 }
