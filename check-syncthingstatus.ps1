@@ -123,9 +123,9 @@ if (Test-Path -Path $PowerShellObject.Optional.logsDirectory -PathType Container
 if ($PowerShellObject.Optional.daysToKeepLogFiles) {
     try {
         $intDaysToKeepLogFiles = $PowerShellObject.Optional.daysToKeepLogFiles
-        Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: Using $($PowerShellObject.Optional.daysToKeepLogFiles) value specified in config file for log retention" -LogType "Info" -DisplayInConsole $false
+        Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "Using $($PowerShellObject.Optional.daysToKeepLogFiles) value specified in config file for log retention" -LogType "Info" -DisplayInConsole $false
     } catch {
-        Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Warning: $($PowerShellObject.Optional.daysToKeepLogFiles) value specified in config file is not valid, defaulting to unlimited log retention" -LogType "Warning"
+        Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$($PowerShellObject.Optional.daysToKeepLogFiles) value specified in config file is not valid, defaulting to unlimited log retention" -LogType "Warning"
     }
 }
 
@@ -156,7 +156,7 @@ try {
     if ($pingStatus.Ping -ne "pong") {
         $authStatus = $false
         $arrStrErrors += "Syncthing ping status at $($Url) returned $($pingStatus.Ping)"
-        Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Error: Syncthing ping status at $($Url) returned $($pingStatus.Status), aborting job" -LogType "Error"
+        Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "Syncthing ping status at $($Url) returned $($pingStatus.Status), aborting job" -LogType "Error"
     } else {
         $authStatus = $true
     }
@@ -165,7 +165,7 @@ try {
 	$line = $_.InvocationInfo.ScriptLineNumber
     $authStatus = $false
 	$arrStrErrors += "Failed to do authenticateds ping check at $($Url) with the following error: $ErrorMessage, aborting job"
-    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Error: Failed to do authenticateds ping check at $($Url) at $($line) with the following error: $ErrorMessage, aborting job" -LogType "Error"
+    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "Failed to do authenticateds ping check at $($Url) at $($line) with the following error: $ErrorMessage, aborting job" -LogType "Error"
 }
 
 if ($authStatus -eq $true) {
@@ -176,22 +176,22 @@ if ($authStatus -eq $true) {
     $devicesConfig = Invoke-RestMethod -Uri $Url -Headers $Headers -Method Get
 
     $ExpectedVsActualDevices = Compare-Object -ReferenceObject $arrDevicesToCheck -DifferenceObject $devicesConfig.name
-    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: Checking for $($arrDevicesToCheck.count) expected devices against those in syncthing at $($BaseURL)" -LogType "Info"
+    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "Checking for $($arrDevicesToCheck.count) expected devices against those in syncthing at $($BaseURL)" -LogType "Info"
     
     foreach ($ExpectedVsActualDevice in $ExpectedVsActualDevices) {
         if ($ExpectedVsActualDevice.SideIndicator -eq "<=") {
             $arrStrErrors += "$($ExpectedVsActualDevice.InputObject) device was expected, but is not in syncthing device list at $($BaseURL), please investigate"
-            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Error: $($ExpectedVsActualDevice.InputObject) device was expected, but is not in syncthing device list at $($BaseURL), please investigate" -LogType "Error"
+            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$($ExpectedVsActualDevice.InputObject) device was expected, but is not in syncthing device list at $($BaseURL), please investigate" -LogType "Error"
         }
     }
 
-    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: Checking $($devicesConfig.count) devices in syncthing at $($BaseURL)" -LogType "Info"
+    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "Checking $($devicesConfig.count) devices in syncthing at $($BaseURL)" -LogType "Info"
 
     foreach ($deviceConfig in $devicesConfig) {
         if ($deviceConfig.name.toLower() -ne $IgnoreHost.toLower()) {
             if ($deviceConfig.paused -eq $true) {
                 $arrStrErrors += "$($deviceConfig.name) is paused, plesae investigate"
-                Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Error: $($folderconfig.name) is paused, plesae investigate" -LogType "Error"
+                Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$($folderconfig.name) is paused, plesae investigate" -LogType "Error"
             }
             $deviceID = $deviceConfig.deviceID
             $dateLastSeen = $devicesStats.$deviceID.lastSeen
@@ -199,9 +199,9 @@ if ($authStatus -eq $true) {
             $daysSinceLastSeen = New-TimeSpan -Start $dateLastSeen -End $now
             if ($daysSinceLastSeen.days -gt 4) {
                 $arrStrErrors += "$($deviceConfig.name) has not been seen for $($daysSinceLastSeen.days) days, please investigate"
-                Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Error: $($deviceConfig.name) has not been seen for $($daysSinceLastSeen.days) days, please investigate" -LogType "Error"
+                Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$($deviceConfig.name) has not been seen for $($daysSinceLastSeen.days) days, please investigate" -LogType "Error"
             } else {
-                Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: $($deviceConfig.name) last seen $($daysSinceLastSeen.days) days ago at $($dateLastSeen)" -LogType "Info"
+                Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$($deviceConfig.name) last seen $($daysSinceLastSeen.days) days ago at $($dateLastSeen)" -LogType "Info"
             }
         }
     }
@@ -212,13 +212,13 @@ if ($authStatus -eq $true) {
     foreach ($folderConfig in $foldersconfig) {
         if ($folderconfig.paused -eq $true) {
             $arrStrErrors += "$($folderconfig.label) is paused, plesae investigate"
-            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Error: $($folderconfig.label) is paused, plesae investigate" -LogType "Error"
+            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$($folderconfig.label) is paused, plesae investigate" -LogType "Error"
         }
         $Url = "$($BaseURL)/rest/folder/errors?folder=$($folderconfig.id)"
         $folderErrors = Invoke-RestMethod -Uri $Url -Headers $Headers -Method Get
         if ($folderErrors.length -gt 0) {
             $arrStrErrors += "There are $($folderErrors), please investigate"
-            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Error: There are $($folderErrors), please investigate" -LogType "Error"
+            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "There are $($folderErrors), please investigate" -LogType "Error"
         }
     }
 
@@ -237,7 +237,7 @@ if ($authStatus -eq $true) {
     #log retention
     if ($intDaysToKeepLogFiles -gt 0) {
         try {
-            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: Purging log files older than $($intDaysToKeepLogFiles) days from $($PowerShellObject.Optional.logsDirectory)" -LogType "Info"
+            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "Purging log files older than $($intDaysToKeepLogFiles) days from $($PowerShellObject.Optional.logsDirectory)" -LogType "Info"
             $CurrentDate = Get-Date
             $DatetoDelete = $CurrentDate.AddDays("-$($intDaysToKeepLogFiles)")
             Get-ChildItem "$($PowerShellObject.Optional.logsDirectory)" | Where-Object { $_.LastWriteTime -lt $DatetoDelete } | Remove-Item -Force
@@ -245,7 +245,7 @@ if ($authStatus -eq $true) {
             $ErrorMessage = $_.Exception.Message
             $line = $_.InvocationInfo.ScriptLineNumber
             $arrStrErrors += "Failed to purge log files older than $($intDaysToKeepLogFiles) days from $($PowerShellObject.Optional.logsDirectory) with the following error: $ErrorMessage"
-            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Error: Failed to purge log files older than $($intDaysToKeepLogFiles) days from $($PowerShellObject.Optional.logsDirectory) with the following error: $ErrorMessage" -LogType "Error"
+            Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "Failed to purge log files older than $($intDaysToKeepLogFiles) days from $($PowerShellObject.Optional.logsDirectory) with the following error: $ErrorMessage" -LogType "Error"
         }
     }
 }
@@ -255,7 +255,7 @@ if ($authStatus -eq $true) {
 [int] $intErrorCount = $arrStrErrors.Count
 
 if ($intErrorCount -gt 0) {
-    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: Encountered $intErrorCount errors, sending error report email" -LogType "Error"
+    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "Encountered $intErrorCount errors, sending error report email" -LogType "Error"
     #loop through all errors and add them to email body
     foreach ($strErrorElement in $arrStrErrors) {
         $intErrorCounter = $intErrorCounter + 1
@@ -263,7 +263,7 @@ if ($intErrorCount -gt 0) {
     }
     $strEmailBody = $strEmailBody + "<br>Please see $strDetailLogFilePath on $strServerName for more details"
 
-    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: Sending email error report via $($errorMailAppID) app on $($errorMailTenantID) tenant from $($errorMailSender) to $($errorMailRecipients) as specified in config file" -LogType "Info"
+    Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "Sending email error report via $($errorMailAppID) app on $($errorMailTenantID) tenant from $($errorMailSender) to $($errorMailRecipients) as specified in config file" -LogType "Info"
     $errorEmailPasswordSecure = Get-Content $errorMailPasswordFile | ConvertTo-SecureString
     $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($errorEmailPasswordSecure)
     $errorEmailPassword = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)
@@ -272,6 +272,6 @@ if ($intErrorCount -gt 0) {
     Send-GVMailMessage -sender $errorMailSender -TenantID $errorMailTenantID -AppID $errorMailAppID -subject "$($errorMailSubjectPrefix): Encountered $($intErrorCount) errors during process" -body $strEmailBody -ContentType "HTML" -Recipient $errorMailRecipients -ClientSecret $errorEmailPassword
 }
 
-Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "$(get-date) Info: Process Complete" -LogType "Info"
+Out-GVLogFile -LogFileObject $objDetailLogFile -WriteToLog $blnWriteToLog -LogString "Process Complete" -LogType "Info"
 
 $objDetailLogFile.close()
